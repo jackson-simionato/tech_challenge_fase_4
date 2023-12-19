@@ -49,8 +49,8 @@ def get_fob_data(api_url, api_key):
     df.reset_index(drop=True, inplace=True)
 
     # Exportação
-    check_dir('./data/eia_fob_price')
-    df.to_csv('./data/eia_fob_price/eia_fob_price_EPCBRENT.csv', index=False)
+    check_dir('data/eia_fob_price')
+    df.to_csv('data/eia_fob_price/eia_fob_price_EPCBRENT.csv', index=False)
 
     return df
 
@@ -91,5 +91,81 @@ def get_petroleum_production_data(api_url, api_key):
 
     return df
 
-data = get_fob_data(api_url, api_key)
-data = get_petroleum_production_data(api_url, api_key)
+def get_energy_consumption_data(api_url, api_key):
+    # URL da requisição
+    url = f'{api_url}/international/data/?api_key={api_key}&frequency=annual&data[0]=value&facets[activityId][]=2&facets[productId][]=44&facets[countryRegionId][]=WORL&facets[unit][]=QBTU&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000'
+    response = requests.get(url)
+
+    # Filtro dos dados
+    data = response.json()['response']['data']
+
+    # Criação do DF
+    df = pd.DataFrame.from_dict(data)
+
+    c = 1
+
+    while len(data) >= 5000:
+        # URL da requisição
+        url = f'{api_url}/international/data/?api_key={api_key}&frequency=annual&data[0]=value&facets[activityId][]=2&facets[productId][]=44&facets[countryRegionId][]=WORL&facets[unit][]=QBTU&sort[0][column]=period&sort[0][direction]=desc&offset={c*5000}&length=5000'
+        response = requests.get(url)
+
+        # Filtro dos dados
+        data = response.json()['response']['data']
+
+        # Criação do DF do request
+        request_df = pd.DataFrame.from_dict(data)
+
+        # Concatenação com DF final
+        df = pd.concat([df, request_df], axis=0)
+
+        c += 1
+
+    df.reset_index(drop=True, inplace=True)
+
+    # Exportação
+    check_dir('./data/eia_energy_consumption')
+    df.to_csv('./data/eia_energy_consumption/eia_annual_energy_consumption_world.csv', index=False)
+
+    return df
+
+def get_oil_consumption_data(api_url, api_key):
+    # URL da requisição
+    url = f'{api_url}/international/data/?api_key={api_key}&frequency=annual&data[0]=value&facets[activityId][]=2&facets[productId][]=5&facets[countryRegionId][]=WORL&facets[unit][]=TBPD&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000'
+    response = requests.get(url)
+
+    # Filtro dos dados
+    data = response.json()['response']['data']
+
+    # Criação do DF
+    df = pd.DataFrame.from_dict(data)
+
+    c = 1
+
+    while len(data) >= 5000:
+        # URL da requisição
+        url = f'{api_url}/international/data/?api_key={api_key}&frequency=annual&data[0]=value&facets[activityId][]=2&facets[productId][]=5&facets[countryRegionId][]=WORL&facets[unit][]=TBPD&sort[0][column]=period&sort[0][direction]=desc&offset={c*5000}&length=5000'
+        response = requests.get(url)
+
+        # Filtro dos dados
+        data = response.json()['response']['data']
+
+        # Criação do DF do request
+        request_df = pd.DataFrame.from_dict(data)
+
+        # Concatenação com DF final
+        df = pd.concat([df, request_df], axis=0)
+
+        c += 1
+
+    df.reset_index(drop=True, inplace=True)
+
+    # Exportação
+    check_dir('./data/eia_oil_consumption')
+    df.to_csv('./data/eia_oil_consumption/eia_annual_oil_consumption_world.csv', index=False)
+
+    return df
+
+get_fob_data(api_url, api_key)
+get_petroleum_production_data(api_url, api_key)
+get_energy_consumption_data(api_url, api_key)
+get_oil_consumption_data(api_url, api_key)
